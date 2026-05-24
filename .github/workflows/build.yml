@@ -9,16 +9,18 @@ jobs:
       
       - name: Download and Setup Frameworks
         run: |
-          # Create the missing directories that the script expects
-          mkdir -p xcfs
+          # Create the deep directory structure Xcode is looking for
+          mkdir -p xcfs/.build/artifacts/xcfs
           mkdir -p Frameworks
           
           chmod +x downloadFrameworks.sh
           ./downloadFrameworks.sh
           
-          # Force extraction if the script only downloaded the file
+          # Extract and Move frameworks to the expected locations
           if [ -f "pythonInstall.tar.gz" ]; then
             tar -xzf pythonInstall.tar.gz
+            # Move extracted frameworks to the xcfs artifacts path
+            find . -name "*.xcframework" -exec cp -R {} xcfs/.build/artifacts/xcfs/ \;
           fi
 
       - name: Build and Archive
