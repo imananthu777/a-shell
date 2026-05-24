@@ -7,21 +7,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - name: Download and Setup Frameworks
+      - name: Manual Framework Setup
         run: |
-          # Create the deep directory structure Xcode is looking for
+          # Create the required deep directory structure
           mkdir -p xcfs/.build/artifacts/xcfs
           mkdir -p Frameworks
           
-          chmod +x downloadFrameworks.sh
-          ./downloadFrameworks.sh
+          # Download the main python archive manually to avoid the Package.swift error
+          curl -L https://github.com/holzschu/a-Shell/releases/download/v0.0.1/pythonInstall.tar.gz -o pythonInstall.tar.gz
           
-          # Extract and Move frameworks to the expected locations
-          if [ -f "pythonInstall.tar.gz" ]; then
-            tar -xzf pythonInstall.tar.gz
-            # Move extracted frameworks to the xcfs artifacts path
-            find . -name "*.xcframework" -exec cp -R {} xcfs/.build/artifacts/xcfs/ \;
-          fi
+          # Extract everything
+          tar -xzf pythonInstall.tar.gz
+          
+          # Move all xcframeworks found into the artifacts directory
+          find . -name "*.xcframework" -exec cp -R {} xcfs/.build/artifacts/xcfs/ \;
+          
+          # Also check if any need to be in the root Frameworks folder
+          cp -R xcfs/.build/artifacts/xcfs/* Frameworks/ 2>/dev/null || true
 
       - name: Build and Archive
         run: |
