@@ -7,20 +7,31 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - name: Download Frameworks
-        run: chmod +x downloadFrameworks.sh && ./downloadFrameworks.sh
+      - name: Download and Setup Frameworks
+        run: |
+          chmod +x downloadFrameworks.sh
+          ./downloadFrameworks.sh
+          # Ensure directories exist
+          mkdir -p xcfs/.build/artifacts/xcfs
+          # If the download script didn't extract them, we do it here
+          if [ -f "pythonInstall.tar.gz" ]; then
+            tar -xzf pythonInstall.tar.gz
+          fi
 
       - name: Build and Archive
         run: |
           PROJ_FILE=$(find . -name "a-Shell.xcodeproj" -print -quit)
           PROJ_DIR=$(dirname "$PROJ_FILE")
           cd "$PROJ_DIR"
+          
+          # We use -allowProvisioningDeviceRegistration to handle the environment
           xcodebuild -project a-Shell.xcodeproj \
             -scheme "a-Shell" \
             -configuration Release \
             -sdk iphoneos \
             -archivePath ./build/a-Shell.xcarchive \
             CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
             clean archive
 
       - name: Create IPA
