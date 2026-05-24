@@ -1,0 +1,33 @@
+name: Build a-Shell IPA
+on: [push]
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Download Frameworks
+        run: chmod +x downloadFrameworks.sh && ./downloadFrameworks.sh
+
+      - name: Build and Archive
+        run: |
+          xcodebuild -project a-Shell.xcodeproj \
+            -scheme "a-Shell" \
+            -configuration Release \
+            -sdk iphoneos \
+            -archivePath $PWD/build/a-Shell.xcarchive \
+            CODE_SIGNING_ALLOWED=NO \
+            clean archive
+
+      - name: Create IPA
+        run: |
+          mkdir -p Payload
+          cp -r build/a-Shell.xcarchive/Products/Applications/a-Shell.app Payload/
+          zip -r a-Shell-Headless.ipa Payload
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Headless-a-Shell-IPA
+          path: a-Shell-Headless.ipa
