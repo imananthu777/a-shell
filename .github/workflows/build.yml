@@ -7,30 +7,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - name: Manual Framework Setup
+      - name: Build IPA in Project Root
         run: |
-          # Create the required deep directory structure
-          mkdir -p xcfs/.build/artifacts/xcfs
-          mkdir -p Frameworks
-          
-          # Download the main python archive manually to avoid the Package.swift error
-          curl -L https://github.com/holzschu/a-Shell/releases/download/v0.0.1/pythonInstall.tar.gz -o pythonInstall.tar.gz
-          
-          # Extract everything
-          tar -xzf pythonInstall.tar.gz
-          
-          # Move all xcframeworks found into the artifacts directory
-          find . -name "*.xcframework" -exec cp -R {} xcfs/.build/artifacts/xcfs/ \;
-          
-          # Also check if any need to be in the root Frameworks folder
-          cp -R xcfs/.build/artifacts/xcfs/* Frameworks/ 2>/dev/null || true
+          # 1. Find where the project actually lives
+          PROJECT_ROOT=$(dirname $(find . -name "a-Shell.xcodeproj" -print -quit))
+          echo "Detected Project Root: $PROJECT_ROOT"
+          cd "$PROJECT_ROOT"
 
-      - name: Build and Archive
-        run: |
-          PROJ_FILE=$(find . -name "a-Shell.xcodeproj" -print -quit)
-          PROJ_DIR=$(dirname "$PROJ_FILE")
-          cd "$PROJ_DIR"
-          
+          # 2. Setup folders in the correct spot
+          mkdir -p xcfs
+          mkdir -p Frameworks
+
+          # 3. Download and Extract Frameworks in the correct spot
+          curl -L https://github.com/holzschu/a-Shell/releases/download/v0.0.1/pythonInstall.tar.gz -o pythonInstall.tar.gz
+          tar -xzf pythonInstall.tar.gz
+
+          # 4. Run the build from the correct directory
           xcodebuild -project a-Shell.xcodeproj \
             -scheme "a-Shell" \
             -configuration Release \
@@ -40,12 +32,11 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             clean archive
 
-      - name: Create IPA
-        run: |
-          APP_PATH=$(find . -name "a-Shell.app" -type d -print -quit)
+          # 5. Prepare the IPA
+          APP_PATH=$(find ./build/a-Shell.xcarchive -name "a-Shell.app" -type d -print -quit)
           mkdir -p Payload
           cp -r "$APP_PATH" Payload/
-          zip -r a-Shell-Headless.ipa Payload
+          zip -r ../a-Shell-Headless.ipa Payload
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
