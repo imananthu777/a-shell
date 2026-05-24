@@ -12,11 +12,13 @@ jobs:
 
       - name: Build and Archive
         run: |
-          # Automatically find the project file path
-          PROJ_PATH=$(find . -name "a-Shell.xcodeproj" -print -quit)
-          echo "Found project at: $PROJ_PATH"
+          # Find the directory containing the xcodeproj
+          PROJ_FILE=$(find . -name "a-Shell.xcodeproj" -print -quit)
+          PROJ_DIR=$(dirname "$PROJ_FILE")
+          echo "Moving to $PROJ_DIR to build..."
           
-          xcodebuild -project "$PROJ_PATH" \
+          cd "$PROJ_DIR"
+          xcodebuild -project a-Shell.xcodeproj \
             -scheme "a-Shell" \
             -configuration Release \
             -sdk iphoneos \
@@ -27,7 +29,7 @@ jobs:
       - name: Create IPA
         run: |
           # Find the app bundle inside the archive
-          APP_PATH=$(find ./build/a-Shell.xcarchive -name "a-Shell.app" -type d -print -quit)
+          APP_PATH=$(find . -name "a-Shell.app" -type d -print -quit)
           mkdir -p Payload
           cp -r "$APP_PATH" Payload/
           zip -r a-Shell-Headless.ipa Payload
