@@ -12,18 +12,18 @@ jobs:
 
       - name: Build and Archive
         run: |
-          xcodebuild -project a-Shell.xcodeproj \
+          xcodebuild -project ./a-Shell.xcodeproj \
             -scheme "a-Shell" \
             -configuration Release \
             -sdk iphoneos \
-            -archivePath $PWD/build/a-Shell.xcarchive \
+            -archivePath ./build/a-Shell.xcarchive \
             CODE_SIGNING_ALLOWED=NO \
             clean archive
 
       - name: Create IPA
         run: |
           mkdir -p Payload
-          cp -r build/a-Shell.xcarchive/Products/Applications/a-Shell.app Payload/
+          cp -r ./build/a-Shell.xcarchive/Products/Applications/a-Shell.app Payload/
           zip -r a-Shell-Headless.ipa Payload
 
       - name: Upload Artifact
