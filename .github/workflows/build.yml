@@ -7,7 +7,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - name: Build a-Shell
+      - name: Setup Frameworks and Build
         run: |
           # 1. Find the project root
           PROJ_FILE=$(find . -name "a-Shell.xcodeproj" -print -quit)
@@ -15,11 +15,14 @@ jobs:
           echo "Project detected in: $PROJ_DIR"
           cd "$PROJ_DIR"
 
-          # 2. Use the official download script (Fixing permissions first)
+          # 2. Create the xcfs directory and download frameworks
+          # Using the official script provided in the source
+          mkdir -p xcfs
           chmod +x downloadFrameworks.sh
           ./downloadFrameworks.sh
 
-          # 3. Compile the app
+          # 3. Final Compilation
+          # We include the -sdk and -arch to ensure it targets the phone correctly
           xcodebuild -project a-Shell.xcodeproj \
             -scheme "a-Shell" \
             -configuration Release \
@@ -29,11 +32,13 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             clean archive
 
-          # 4. Create the IPA
-          APP_PATH=$(find ./build/a-Shell.xcarchive -name "a-Shell.app" -type d -print -quit)
+      - name: Create IPA
+        run: |
+          # Detect the .app file and package it
+          APP_PATH=$(find . -name "a-Shell.app" -type d -print -quit)
           mkdir -p Payload
           cp -r "$APP_PATH" Payload/
-          zip -r ../a-Shell-Headless.ipa Payload
+          zip -r a-Shell-Headless.ipa Payload
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
