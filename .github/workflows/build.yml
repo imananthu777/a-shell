@@ -12,15 +12,8 @@ jobs:
 
       - name: Build and Archive
         run: |
-          # Find the directory containing the xcodeproj
           PROJ_FILE=$(find . -name "a-Shell.xcodeproj" -print -quit)
-          if [ -z "$PROJ_FILE" ]; then
-            echo "Error: a-Shell.xcodeproj not found in the repository."
-            exit 1
-          fi
           PROJ_DIR=$(dirname "$PROJ_FILE")
-          echo "Moving to $PROJ_DIR to build..."
-          
           cd "$PROJ_DIR"
           xcodebuild -project a-Shell.xcodeproj \
             -scheme "a-Shell" \
@@ -32,7 +25,6 @@ jobs:
 
       - name: Create IPA
         run: |
-          # Find the app bundle inside the archive
           APP_PATH=$(find . -name "a-Shell.app" -type d -print -quit)
           mkdir -p Payload
           cp -r "$APP_PATH" Payload/
